@@ -44,10 +44,18 @@ function(req, res) {
   var username = req.body.username;
   var password = req.body.password;
 
-  new User({ username: username, password: password }).fetch().then(function(found) {
+  new User({ username: username }).fetch().then(function(found) {
     if (found) {
-      util.makeCookie(req, res);
-      res.redirect('/');
+      var hash = found.get('password');
+      console.log("the hash is: " + hash);
+      util.validateUser(password, hash, function(result) {
+        if (result) {
+          util.makeCookie(req, res);
+          res.redirect('/');
+        } else {
+          res.redirect('/login');
+        }
+      });
     } else {
       res.redirect('/login');
     }
@@ -123,16 +131,18 @@ app.post('/signup', function(req, res){
 
   var username = req.body.username;
   var password = req.body.password;
+  var user;
+  util.createHash(password, function(hash) {
+    user = new User({
+      username: username,
+      password: hash
+    });
 
-  var user = new User({
-    username: username,
-    password: password
-  });
-
-  user.save().then(function(newUser) {
-    Users.add(newUser);
-    util.makeCookie(req, res);
-    res.redirect('/');
+    user.save().then(function(newUser) {
+      Users.add(newUser);
+      util.makeCookie(req, res);
+      res.redirect('/');
+    });
   });
 
 });
@@ -146,7 +156,7 @@ app.post('/signup', function(req, res){
 app.get('/*', function(req, res) {
   new Link({ code: req.params[0] }).fetch().then(function(link) {
     if (!link) {
-      res.redirect('/login');
+      res.redirect('/');
     } else {
       var click = new Click({
         link_id: link.get('id')
