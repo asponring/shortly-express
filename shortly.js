@@ -25,19 +25,40 @@ app.use(express.static(__dirname + '/public'));
 
 app.get('/',
 function(req, res) {
-  res.render('index');
+  //check if user is already signed in
+  //if signed in, return index
+  //else, redirect to /login
+
+ if(util.checkUser()){
+    res.render('index');
+ } else {
+    res.redirect('/login');
+ }
+});
+
+app.get('/login',
+function(req, res) {
+  res.render('login');
 });
 
 app.get('/create',
 function(req, res) {
-  res.render('index');
+  if(util.checkUser()){
+     res.render('index');
+  } else {
+     res.redirect('/login');
+  }
 });
 
 app.get('/links',
 function(req, res) {
-  Links.reset().fetch().then(function(links) {
-    res.send(200, links.models);
-  });
+  if(util.checkUser()){
+    Links.reset().fetch().then(function(links) {
+      res.send(200, links.models);
+    });
+  } else {
+    res.redirect('/login');
+  }
 });
 
 app.post('/links',
@@ -78,7 +99,27 @@ function(req, res) {
 // Write your authentication routes here
 /************************************************************/
 
+app.get('/signup',
+function(req, res) {
+  res.render('signup');
+});
 
+app.post('/signup', function(req, res){
+
+  var username = req.body.username;
+  var password = req.body.password;
+
+  var user = new User({
+    username: username,
+    password: password
+  });
+
+  user.save().then(function(newUser) {
+    Users.add(newUser);
+    res.send(200, newUser);
+  });
+
+});
 
 /************************************************************/
 // Handle the wildcard route last - if all other routes fail
