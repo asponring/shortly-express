@@ -41,6 +41,22 @@ function(req, res) {
   res.render('login');
 });
 
+app.post('/login',
+function(req, res) {
+  var username = req.body.username;
+  var password = req.body.password;
+
+  new User({ username: username, password: password }).fetch().then(function(found) {
+    if (found) {
+      res.redirect('/');
+    } else {
+      res.redirect('/login');
+    }
+  });
+});
+
+
+
 app.get('/create',
 function(req, res) {
   if(util.checkUser()){
@@ -116,7 +132,7 @@ app.post('/signup', function(req, res){
 
   user.save().then(function(newUser) {
     Users.add(newUser);
-    res.send(200, newUser);
+    res.redirect('/');
   });
 
 });
