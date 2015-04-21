@@ -2,7 +2,7 @@ var express = require('express');
 var util = require('./lib/utility');
 var partials = require('express-partials');
 var bodyParser = require('body-parser');
-var cookieParser = require('cookie-parser')
+var cookieParser = require('cookie-parser');
 
 
 var db = require('./app/config');
@@ -146,7 +146,7 @@ app.post('/signup', function(req, res){
 app.get('/*', function(req, res) {
   new Link({ code: req.params[0] }).fetch().then(function(link) {
     if (!link) {
-      res.redirect('/');
+      res.redirect('/login');
     } else {
       var click = new Click({
         link_id: link.get('id')
