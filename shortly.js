@@ -2,6 +2,7 @@ var express = require('express');
 var util = require('./lib/utility');
 var partials = require('express-partials');
 var bodyParser = require('body-parser');
+var cookieParser = require('cookie-parser')
 
 
 var db = require('./app/config');
@@ -22,18 +23,15 @@ app.use(bodyParser.json());
 app.use(bodyParser.urlencoded({ extended: true }));
 app.use(express.static(__dirname + '/public'));
 
+app.use(cookieParser());
 
 app.get('/',
 function(req, res) {
-  //check if user is already signed in
-  //if signed in, return index
-  //else, redirect to /login
-
- if(util.checkUser()){
+  if(util.checkUser(req.cookies)){
     res.render('index');
- } else {
-    res.redirect('/login');
- }
+  } else {
+     res.redirect('/login');
+  }
 });
 
 app.get('/login',
@@ -48,6 +46,7 @@ function(req, res) {
 
   new User({ username: username, password: password }).fetch().then(function(found) {
     if (found) {
+      util.makeCookie(req, res);
       res.redirect('/');
     } else {
       res.redirect('/login');
@@ -59,7 +58,7 @@ function(req, res) {
 
 app.get('/create',
 function(req, res) {
-  if(util.checkUser()){
+  if(util.checkUser(req.cookies)){
      res.render('index');
   } else {
      res.redirect('/login');
@@ -68,7 +67,7 @@ function(req, res) {
 
 app.get('/links',
 function(req, res) {
-  if(util.checkUser()){
+  if(util.checkUser(req.cookies)){
     Links.reset().fetch().then(function(links) {
       res.send(200, links.models);
     });
@@ -132,6 +131,7 @@ app.post('/signup', function(req, res){
 
   user.save().then(function(newUser) {
     Users.add(newUser);
+    util.makeCookie(req, res);
     res.redirect('/');
   });
 
