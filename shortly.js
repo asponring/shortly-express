@@ -47,7 +47,6 @@ function(req, res) {
   new User({ username: username }).fetch().then(function(found) {
     if (found) {
       var hash = found.get('password');
-      console.log("the hash is: " + hash);
       util.validateUser(password, hash, function(result) {
         if (result) {
           util.makeCookie(req, res);
@@ -152,6 +151,12 @@ app.post('/signup', function(req, res){
 // assume the route is a short code and try and handle it here.
 // If the short-code doesn't exist, send the user to '/'
 /************************************************************/
+app.get('/logout', function(req, res) {
+  // delete all cookies
+  // redirect to login page
+  res.clearCookie('loggedIn');
+  res.redirect('/');
+});
 
 app.get('/*', function(req, res) {
   new Link({ code: req.params[0] }).fetch().then(function(link) {
