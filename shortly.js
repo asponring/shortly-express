@@ -3,7 +3,7 @@ var util = require('./lib/utility');
 var partials = require('express-partials');
 var bodyParser = require('body-parser');
 var cookieParser = require('cookie-parser');
-
+express.session = require('express-session');
 
 var db = require('./app/config');
 var Users = require('./app/collections/users');
@@ -27,11 +27,16 @@ app.use(cookieParser());
 
 app.get('/',
 function(req, res) {
-  if(util.checkUser(req.cookies)){
-    res.render('index');
-  } else {
-     res.redirect('/login');
-  }
+
+  util.checkUser(req.cookies, function(result){
+    if(result){
+      res.render('index');
+    } else {
+      res.redirect('/login');
+    }
+  });
+
+
 });
 
 app.get('/login',
@@ -49,8 +54,9 @@ function(req, res) {
       var hash = found.get('password');
       util.validateUser(password, hash, function(result) {
         if (result) {
-          util.makeCookie(req, res);
-          res.redirect('/');
+          util.makeCookie(username, res, function(){
+            res.redirect('/');
+          });
         } else {
           res.redirect('/login');
         }
@@ -65,22 +71,26 @@ function(req, res) {
 
 app.get('/create',
 function(req, res) {
-  if(util.checkUser(req.cookies)){
-     res.render('index');
-  } else {
-     res.redirect('/login');
-  }
+  util.checkUser(req.cookies, function(result){
+    if(result){
+      res.render('index');
+    } else {
+      res.redirect('/login');
+    }
+  });
 });
 
 app.get('/links',
 function(req, res) {
-  if(util.checkUser(req.cookies)){
-    Links.reset().fetch().then(function(links) {
-      res.send(200, links.models);
-    });
-  } else {
-    res.redirect('/login');
-  }
+  util.checkUser(req.cookies, function(result){
+    if(result){
+      Links.reset().fetch().then(function(links) {
+        res.send(200, links.models);
+      });
+    } else {
+      res.redirect('/login');
+    }
+  });
 });
 
 app.post('/links',
@@ -139,8 +149,9 @@ app.post('/signup', function(req, res){
 
     user.save().then(function(newUser) {
       Users.add(newUser);
-      util.makeCookie(req, res);
-      res.redirect('/');
+      util.makeCookie(username, res, function(){
+        res.redirect('/');
+      });
     });
   });
 
@@ -154,7 +165,7 @@ app.post('/signup', function(req, res){
 app.get('/logout', function(req, res) {
   // delete all cookies
   // redirect to login page
-  res.clearCookie('loggedIn');
+  res.clearCookie('session');
   res.redirect('/');
 });
 
