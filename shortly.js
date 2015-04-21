@@ -3,11 +3,11 @@ var util = require('./lib/utility');
 var partials = require('express-partials');
 var bodyParser = require('body-parser');
 var cookieParser = require('cookie-parser');
-express.session = require('express-session');
 
 var db = require('./app/config');
 var Users = require('./app/collections/users');
-var User = require('./app/models/user');
+var userUtils = require('./app/models/user');
+var User = userUtils.User;
 var Links = require('./app/collections/links');
 var Link = require('./app/models/link');
 var Click = require('./app/models/click');
@@ -28,16 +28,13 @@ app.use(cookieParser());
 
 app.get('/',
 function(req, res) {
-
-  util.checkUser(req.cookies, function(result){
+  userUtils.checkUser(req.cookies, function(result){
     if(result){
       res.render('index');
     } else {
       res.redirect('/login');
     }
   });
-
-
 });
 
 app.get('/login',
@@ -53,9 +50,9 @@ function(req, res) {
   new User({ username: username }).fetch().then(function(found) {
     if (found) {
       var hash = found.get('password');
-      util.validateUser(password, hash, function(result) {
+      userUtils.validateUser(password, hash, function(result) {
         if (result) {
-          util.makeCookie(username, res, function(){
+          userUtils.makeCookie(username, res, function(){
             res.redirect('/');
           });
         } else {
@@ -72,7 +69,7 @@ function(req, res) {
 
 app.get('/create',
 function(req, res) {
-  util.checkUser(req.cookies, function(result){
+  userUtils.checkUser(req.cookies, function(result){
     if(result){
       res.render('index');
     } else {
@@ -83,7 +80,7 @@ function(req, res) {
 
 app.get('/links',
 function(req, res) {
-  util.checkUser(req.cookies, function(result){
+  userUtils.checkUser(req.cookies, function(result){
     if(result){
       Links.reset().fetch().then(function(links) {
         res.send(200, links.models);
@@ -128,21 +125,16 @@ function(req, res) {
   });
 });
 
-/************************************************************/
-// Write your authentication routes here
-/************************************************************/
-
 app.get('/signup',
 function(req, res) {
   res.render('signup');
 });
 
 app.post('/signup', function(req, res){
-
   var username = req.body.username;
   var password = req.body.password + passkey.hashKey;
   var user;
-  util.createHash(password, function(hash) {
+  userUtils.createHash(password, function(hash) {
     user = new User({
       username: username,
       password: hash
@@ -150,7 +142,7 @@ app.post('/signup', function(req, res){
 
     user.save().then(function(newUser) {
       Users.add(newUser);
-      util.makeCookie(username, res, function(){
+      userUtils.makeCookie(username, res, function(){
         res.redirect('/');
       });
     });
@@ -158,14 +150,7 @@ app.post('/signup', function(req, res){
 
 });
 
-/************************************************************/
-// Handle the wildcard route last - if all other routes fail
-// assume the route is a short code and try and handle it here.
-// If the short-code doesn't exist, send the user to '/'
-/************************************************************/
 app.get('/logout', function(req, res) {
-  // delete all cookies
-  // redirect to login page
   res.clearCookie('session');
   res.redirect('/');
 });
