@@ -11,6 +11,7 @@ var User = require('./app/models/user');
 var Links = require('./app/collections/links');
 var Link = require('./app/models/link');
 var Click = require('./app/models/click');
+var passkey = require('./password');
 
 var app = express();
 
@@ -47,7 +48,7 @@ function(req, res) {
 app.post('/login',
 function(req, res) {
   var username = req.body.username;
-  var password = req.body.password;
+  var password = req.body.password + passkey.hashKey;
 
   new User({ username: username }).fetch().then(function(found) {
     if (found) {
@@ -139,7 +140,7 @@ function(req, res) {
 app.post('/signup', function(req, res){
 
   var username = req.body.username;
-  var password = req.body.password;
+  var password = req.body.password + passkey.hashKey;
   var user;
   util.createHash(password, function(hash) {
     user = new User({
