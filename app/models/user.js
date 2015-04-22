@@ -31,15 +31,21 @@ exports.checkUser = function(cookie, cb){
 
 exports.validateUser = function(value, hash, cb) {
   bcrypt.compare(value, hash, function(err, result) {
-    if (err) throw err;
-    cb(result);
+    if (err) {
+      cb(false);
+    } else {
+      cb(result);
+    }
   });
 };
 
 exports.createHash = function(value, cb) {
   bcrypt.hash(value, null, null, function(err, hash) {
-    if (err) throw err;
-    cb(hash);
+    if (err) {
+      cb(false);
+    } else {
+      cb(hash);
+    }
   });
 };
 
