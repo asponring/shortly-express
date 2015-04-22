@@ -1,6 +1,7 @@
 var db = require('../config');
-var bcrypt = require('bcrypt-nodejs');
 var Promise = require('bluebird');
+var bcrypt = require('bcrypt-nodejs');
+Promise.promisifyAll(bcrypt);
 var passkey = require('../../password');
 
 exports.User = db.Model.extend({
@@ -30,19 +31,22 @@ exports.checkUser = function(cookie, cb){
 };
 
 exports.validateUser = function(value, hash, cb) {
-  bcrypt.compare(value, hash, function(err, result) {
-    if (err) {
-      cb(false);
-    } else {
-      cb(result);
-    }
+  bcrypt.compareAsync(value, hash)
+  .then(function(result){
+    cb(result);
+  })
+  .catch(function(error){
+    cb(false);
   });
 };
 
 exports.createHash = function(value, cb) {
-  bcrypt.hash(value, null, null, function(err, hash) {
-    if (err) throw err;
+  bcrypt.hashAsync(value, null, null)
+  .then(function(hash) {
     cb(hash);
+  })
+  .catch(function(error) {
+    throw error;
   });
 };
 
