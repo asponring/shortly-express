@@ -41,11 +41,8 @@ exports.validateUser = function(value, hash, cb) {
 
 exports.createHash = function(value, cb) {
   bcrypt.hash(value, null, null, function(err, hash) {
-    if (err) {
-      cb(false);
-    } else {
-      cb(hash);
-    }
+    if (err) throw err;
+    cb(hash);
   });
 };
 
